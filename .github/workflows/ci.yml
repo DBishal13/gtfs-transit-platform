@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       # No package-lock.json is committed yet (this environment has no Node to generate
       # one) — using `npm install` for now. Once you run `npm install` locally and commit
       # the resulting lockfile, switch this to `npm ci` and add `cache: npm` above for
