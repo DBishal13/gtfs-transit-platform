@@ -1,0 +1,11 @@
+[
+  {
+    "route_a": "R1",
+    "route_b": "R2",
+    "shared_stops": 1,
+    "route_a_stops": 3,
+    "route_b_stops": 2,
+    "jaccard": 0.25,
+    "high_overlap": false
+  }
+]

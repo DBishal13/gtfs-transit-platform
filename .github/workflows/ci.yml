@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pipeline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pipeline dependencies
+        run: pip install -e ".[dev]"
+      - name: Run pytest
+        run: pytest -q
+      - name: Validate manifest contract schema is well-formed
+        run: python -c "import json; json.load(open('pipeline/export/schema/manifest.schema.json'))"
+
+  app-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # No package-lock.json is committed yet (this environment has no Node to generate
+      # one) — using `npm install` for now. Once you run `npm install` locally and commit
+      # the resulting lockfile, switch this to `npm ci` and add `cache: npm` above for
+      # faster, fully reproducible installs.
+      - name: Install app dependencies
+        run: npm install
+      - name: Lint
+        run: npm run lint
+      - name: Type-check and build (using committed sample data)
+        run: npm run build

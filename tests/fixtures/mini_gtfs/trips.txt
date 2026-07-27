@@ -1,0 +1,4 @@
+route_id,service_id,trip_id,trip_headsign,direction_id,block_id,shape_id
+R1,WD,T1,Downtown,0,B1,SH1
+R1,WD,T2,Downtown,0,B1,SH1
+R2,WD,T3,Uptown,0,B2,SH2

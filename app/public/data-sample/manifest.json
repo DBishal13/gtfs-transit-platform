@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-27T21:22:50.103456+00:00",
+  "feeds": [
+    {
+      "id": "sample-feed",
+      "name": "Sample Feed (tiny fixture)",
+      "region": "Testville",
+      "source_url": "https://example.com/sample-gtfs.zip",
+      "license": "CC0",
+      "bbox": [
+        -80.205,
+        26.0,
+        -80.18,
+        26.02
+      ],
+      "counts": {
+        "routes": 2,
+        "stops": 4,
+        "trips": 3
+      },
+      "assets": {
+        "routes_summary": "data/sample-feed/routes_summary.json",
+        "headway": "data/sample-feed/headway.json",
+        "coverage": "data/sample-feed/coverage.json",
+        "quality": "data/sample-feed/quality.json",
+        "spacing": "data/sample-feed/spacing.json",
+        "duplication": "data/sample-feed/duplication.json",
+        "schedule_span": "data/sample-feed/schedule_span.json",
+        "routes_geojson": "data/sample-feed/routes.geojson",
+        "stops_geojson": "data/sample-feed/stops.geojson",
+        "tiles": null,
+        "stop_times_parquet": "data/sample-feed/stop_times.parquet"
+      },
+      "updated_at": "2026-07-27T21:22:50.103456+00:00"
+    }
+  ]
+}

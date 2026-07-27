@@ -1,0 +1,23 @@
+[
+  {
+    "route_id": "R2",
+    "from_stop_id": "S4",
+    "to_stop_id": "S2",
+    "gap_m": 1598.8,
+    "is_outlier": false
+  },
+  {
+    "route_id": "R1",
+    "from_stop_id": "S1",
+    "to_stop_id": "S2",
+    "gap_m": 1495.0,
+    "is_outlier": false
+  },
+  {
+    "route_id": "R1",
+    "from_stop_id": "S2",
+    "to_stop_id": "S3",
+    "gap_m": 1495.0,
+    "is_outlier": false
+  }
+]

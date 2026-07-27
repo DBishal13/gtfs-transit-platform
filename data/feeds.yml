@@ -1,0 +1,23 @@
+# Feed registry — the entry point for onboarding a new transit agency.
+#
+# To add an agency:
+#   1. Download its GTFS static feed (a .zip per https://gtfs.org/schedule/) and
+#      place it at data/raw/<id>/gtfs.zip
+#   2. Add an entry below. `id` becomes the directory name and the manifest key —
+#      keep it short, lowercase, hyphenated.
+#   3. Run: python -m pipeline.cli all --feed <id>
+#   4. Commit the new data/raw/<id>/ directory. Generated assets are NOT committed —
+#      CI rebuilds them on every deploy. See docs/adding-a-feed.md for details.
+
+feeds:
+  - id: broward-bct
+    name: Broward County Transit
+    region: Broward County, FL
+    agency_timezone: America/New_York
+    source_url: https://www.broward.org/bct/documents/google_transit.zip
+    license: Public Domain (agency open data)
+    raw_path: data/raw/broward-bct/gtfs.zip
+    # Used to scope the Census population-weighted coverage pull to the right county.
+    census:
+      state_fips: "12"    # Florida
+      county_fips: "011"  # Broward County

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+.ruff_cache/
+.mypy_cache/
+
+# Node / frontend
+node_modules/
+app/dist/
+app/.vite/
+*.local
+
+# Real/generated data the app reads locally — populated from app/public/data-sample/
+# (committed) or a real pipeline run/CI artifact. Never committed itself.
+app/public/data/
+
+# Pipeline build output (regenerated, never committed)
+data/build/
+data/raw/*/census/
+!data/raw/*/census/.gitkeep
+
+# External toolchain fetched at CI/dev time
+.tools/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env
+.env

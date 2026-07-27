@@ -1,0 +1,16 @@
+{
+  "feed_id": "sample-feed",
+  "generated_at": "2026-07-27T21:22:49.522418+00:00",
+  "official_validator": {
+    "ran": false,
+    "notice_count_by_severity": {},
+    "notice_types": []
+  },
+  "custom_checks": [],
+  "summary": {
+    "status": "pass",
+    "custom_errors": 0,
+    "custom_warnings": 0,
+    "official_errors": 0
+  }
+}

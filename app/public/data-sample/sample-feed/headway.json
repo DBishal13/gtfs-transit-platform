@@ -1,0 +1,35 @@
+{
+  "by_route": [
+    {
+      "route_id": "R1",
+      "direction_id": 0,
+      "day_type": "weekday",
+      "time_bucket": "am_peak",
+      "avg_headway_min": 30.0,
+      "trip_count": 2
+    }
+  ],
+  "by_stop": [
+    {
+      "stop_id": "S1",
+      "day_type": "weekday",
+      "time_bucket": "am_peak",
+      "avg_headway_min": 30.0,
+      "departure_count": 2
+    },
+    {
+      "stop_id": "S2",
+      "day_type": "weekday",
+      "time_bucket": "am_peak",
+      "avg_headway_min": 15.0,
+      "departure_count": 3
+    },
+    {
+      "stop_id": "S3",
+      "day_type": "weekday",
+      "time_bucket": "am_peak",
+      "avg_headway_min": 30.0,
+      "departure_count": 2
+    }
+  ]
+}

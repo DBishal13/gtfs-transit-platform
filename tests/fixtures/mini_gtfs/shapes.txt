@@ -1,0 +1,6 @@
+shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence
+SH1,26.000,-80.200,1
+SH1,26.010,-80.190,2
+SH1,26.020,-80.180,3
+SH2,26.005,-80.205,1
+SH2,26.010,-80.190,2

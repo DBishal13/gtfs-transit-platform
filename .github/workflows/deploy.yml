@@ -1,0 +1,109 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  GTFS_VALIDATOR_VERSION: "8.0.1"
+
+jobs:
+  build-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pipeline dependencies
+        run: pip install -e .
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache gtfs-validator jar
+        id: cache-validator
+        uses: actions/cache@v4
+        with:
+          path: .tools/gtfs-validator.jar
+          key: gtfs-validator-${{ env.GTFS_VALIDATOR_VERSION }}
+      - name: Download gtfs-validator
+        if: steps.cache-validator.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .tools
+          curl -sL -o .tools/gtfs-validator.jar \
+            "https://github.com/MobilityData/gtfs-validator/releases/download/v${GTFS_VALIDATOR_VERSION}/gtfs-validator-${GTFS_VALIDATOR_VERSION}-cli.jar"
+
+      - name: Cache tippecanoe build
+        id: cache-tippecanoe
+        uses: actions/cache@v4
+        with:
+          path: .tools/tippecanoe
+          key: tippecanoe-${{ runner.os }}-v2.79.0
+      - name: Build tippecanoe
+        if: steps.cache-tippecanoe.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch 2.79.0 https://github.com/felt/tippecanoe.git /tmp/tippecanoe-src
+          make -C /tmp/tippecanoe-src -j"$(nproc)"
+          mkdir -p .tools/tippecanoe
+          cp /tmp/tippecanoe-src/tippecanoe .tools/tippecanoe/
+      - name: Add tippecanoe to PATH
+        run: echo "${{ github.workspace }}/.tools/tippecanoe" >> "$GITHUB_PATH"
+
+      - name: Run pipeline for every registered feed
+        env:
+          GTFS_VALIDATOR_JAR: ${{ github.workspace }}/.tools/gtfs-validator.jar
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+        run: python -m pipeline.cli all --all-feeds
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-data
+          path: data/build/
+
+  build-app:
+    needs: build-data
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-data
+          path: app/public/data
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install app dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build-app
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,14 @@
+{
+  "feeds": [
+    {
+      "feed_id": "sample-feed",
+      "route_count": 2,
+      "stop_count": 4,
+      "trip_count": 3,
+      "avg_weekday_headway_min": 30.0,
+      "pct_population_covered_400m": null,
+      "quality_status": "pass",
+      "quality_errors": 0
+    }
+  ]
+}

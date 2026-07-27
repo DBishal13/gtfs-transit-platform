@@ -1,0 +1,18 @@
+[
+  {
+    "route_id": "R1",
+    "day_type": "weekday",
+    "trip_count": 2,
+    "first_departure_min": 480.0,
+    "last_arrival_min": 530.0,
+    "span_hours": 0.83
+  },
+  {
+    "route_id": "R2",
+    "day_type": "weekday",
+    "trip_count": 1,
+    "first_departure_min": 485.0,
+    "last_arrival_min": 505.0,
+    "span_hours": 0.33
+  }
+]
