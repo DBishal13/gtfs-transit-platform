@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from service.app.config import get_settings
-from service.app.routers import auth, feeds, geo, health, orgs
+from service.app.routers import agent, auth, feeds, geo, health, orgs
 
 
 def create_app() -> FastAPI:
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(orgs.router)
     app.include_router(feeds.router)
     app.include_router(geo.router)
+    app.include_router(agent.router)
 
     return app
 
