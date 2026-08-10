@@ -50,7 +50,14 @@ def _copy_table(cursor, table: str, feed_id: str, df) -> None:
     columns = [c for c in TABLE_COLUMNS[table] if c in df.columns]
     if not columns:
         return
-    subset = df[columns].where(df[columns].notna(), None)
+    # Cast to object dtype *before* replacing missing values: pandas' nullable
+    # extension dtypes (e.g. the "string" dtype used throughout
+    # pipeline/ingest/schema.py's DTYPES) normalize an assigned `None` right back
+    # to their own pd.NA sentinel, which psycopg has no adapter for. Casting to
+    # object first breaks columns out of the extension-array machinery so `None`
+    # actually sticks as a plain Python None (-> SQL NULL via COPY).
+    subset = df[columns].astype(object)
+    subset = subset.where(subset.notna(), None)
     col_list = ", ".join(["feed_id"] + columns)
     with cursor.copy(f"COPY {table} ({col_list}) FROM STDIN") as copy:
         for row in subset.itertuples(index=False, name=None):

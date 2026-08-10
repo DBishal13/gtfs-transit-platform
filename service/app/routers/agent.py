@@ -74,7 +74,15 @@ def ask(
         )
         history = []
 
-    llm = get_llm_provider(settings)
+    try:
+        llm = get_llm_provider(settings)
+    except RuntimeError as exc:
+        # get_llm_provider raises RuntimeError when the configured provider's API key
+        # is missing (LLM_PROVIDER set but ANTHROPIC_API_KEY/OPENAI_API_KEY isn't) —
+        # a real, findable-in-production misconfiguration, not a bug, so it gets a
+        # clean 503 rather than an opaque 500. Discovered by actually running this
+        # locally without an API key configured.
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
     turn = run_agent_turn(
         conn,
         org_id=principal.org_id,

@@ -79,7 +79,28 @@ than failing) if one isn't reachable.
 pytest service/tests -q
 ```
 
-## Deploying
+## Cost
+
+Two ways to run this, at two very different price points — pick based on whether you need
+it publicly reachable or just runnable on demand.
+
+**Option A — local only, $0, no card anywhere.** `docker compose up` + `uvicorn` (see
+"Local development" above) runs the full stack — Postgres/PostGIS, the API, and (pointed
+at it) the frontend — entirely on your machine. Nothing is publicly reachable; this is
+what you'd use to demo the app to yourself or on a screen-share. The one piece this can't
+avoid: an LLM API call (Anthropic/OpenAI) still costs real tokens the moment `/agent/ask`
+is actually invoked with a real key configured — everything else (signup/login, geo
+queries, the console UI) works with zero API key and zero cost.
+
+**Option B — hosted (Fly.io + Neon), for a real public URL.** *Correction from an earlier
+claim in this repo's history: Fly.io no longer has a free tier* (removed in 2024) — new
+accounts get a small one-time trial credit, then a credit card is required, and the
+cheapest always-on app runs roughly $2–5/month. Neon's free tier (Postgres/PostGIS) is
+genuinely free at this project's scale and doesn't need a card. Either way, the LLM API
+itself (Anthropic or OpenAI) is pay-as-you-go with only a small one-time free credit on
+signup — that's the one recurring cost neither hosting option avoids.
+
+## Deploying (Option B — hosted)
 
 Nothing below runs automatically — it's the manual provisioning step `.github/workflows/deploy-service.yml`
 is written to wait for (its `deploy` job is skipped, not failed, until `FLY_API_TOKEN` exists).
@@ -90,6 +111,7 @@ is written to wait for (its `deploy` job is skipped, not failed, until `FLY_API_
    connection string.
 2. **Fly.io app**: `fly launch --no-deploy` from the repo root (uses `fly.toml` /
    `service/Dockerfile`; rename the placeholder `app` name in `fly.toml` to whatever it assigns).
+   Requires a credit card on file — see "Cost" above.
 3. **Secrets** (never commit these): `fly secrets set DATABASE_URL=<neon connection string>
    JWT_SECRET_KEY=<a real random secret> ANTHROPIC_API_KEY=<or OPENAI_API_KEY, matching LLM_PROVIDER>
    CORS_ORIGINS='["https://<your-username>.github.io"]'`
