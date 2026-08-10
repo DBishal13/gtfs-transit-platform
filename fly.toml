@@ -1,0 +1,37 @@
+# Fly.io app config for the backend service (service/). Lives at the repo root — not
+# inside service/ — because service/Dockerfile needs both pipeline/ and service/ in its
+# build context, and Fly's build context defaults to the directory containing this file.
+#
+# Provisioning is a manual step — see "Deploying" in service/README.md. Run
+# `fly launch --no-deploy` from the repo root once (it will offer to regenerate/adjust
+# this file — accept the Dockerfile-based build, rename `app` below to whatever it
+# assigns) then `fly deploy` to ship. flyctl isn't available in the environment this was
+# authored in, so treat this file as a documented starting point to validate locally, not
+# a guaranteed-exact config.
+
+app = "gtfs-transit-platform-api"  # placeholder — rename to your actual Fly app name
+primary_region = "iad"
+
+[build]
+  dockerfile = "service/Dockerfile"
+
+[env]
+  ENVIRONMENT = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[deploy]
+  release_command = "python -m service.migrations.runner"
+
+# Secrets NOT set here (never commit them) — set once via:
+#   fly secrets set DATABASE_URL=postgresql://... JWT_SECRET_KEY=... \
+#     ANTHROPIC_API_KEY=... CORS_ORIGINS='["https://<your-username>.github.io"]'

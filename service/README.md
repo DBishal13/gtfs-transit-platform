@@ -13,9 +13,12 @@ per-tenant data isolation. See the plan this was built from for the full design 
 
 ## Status
 
-**Phase 4 of 6** — database foundation, geo REST endpoints, auth/multi-tenancy, geocoding,
-reachability, and the natural-language agent. No frontend integration yet (Phase 5), no
-deployment/observability polish yet (Phase 6).
+**Phase 6 of 6 (complete)** — database foundation, geo REST endpoints, auth/multi-tenancy,
+geocoding, reachability, the natural-language agent, the frontend Dispatch console
+(`app/src/components/agent/DispatchConsole.tsx`), and this phase's deployment/observability
+polish: rate limiting, structured logging, usage metering, and a Dockerfile/Fly.io config. What's
+still a manual step for you: actually provisioning a Fly.io app and a hosted Postgres (e.g. Neon)
+— see "Deploying" below.
 
 Every `/geo/*` and `/agent/*` request requires either a JWT (`Authorization: Bearer <token>`,
 issued by `/auth/login`) or an API key (`X-API-Key: <key>`, minted via `/auth/api-keys`), and is
@@ -37,6 +40,14 @@ taken from the LLM's proposed arguments — see `service/app/services/agent/safe
 list of prompt-injection mitigations and `service/tests/test_agent_tools_safety.py` for the
 adversarial tests. Every conversation turn (including the tool-call trace) is persisted for audit
 via `service/app/services/agent/store.py`.
+
+Every `/geo/*` and `/agent/ask` request is per-org rate-limited (in-memory sliding window, see
+`service/app/middleware/rate_limit.py`; `Settings.rate_limit_default_per_min`, default 60/min).
+Every request is logged as one structured JSON line (`service/app/middleware/request_context.py`)
+with a `request_id` also returned as an `X-Request-ID` response header. `/agent/ask` additionally
+records an `api_usage_events` row per call (route, latency, LLM token counts — see
+`service/app/services/usage_service.py`), enough for a simple "usage this month" query per org;
+not wired to any billing.
 
 ## Local development
 
@@ -68,8 +79,33 @@ than failing) if one isn't reachable.
 pytest service/tests -q
 ```
 
+## Deploying
+
+Nothing below runs automatically — it's the manual provisioning step `.github/workflows/deploy-service.yml`
+is written to wait for (its `deploy` job is skipped, not failed, until `FLY_API_TOKEN` exists).
+
+1. **Database**: create a hosted Postgres with the PostGIS extension available — [Neon](https://neon.tech)
+   (recommended: branching, generous free tier, zero adaptation needed for the hand-written SQL
+   already in `pipeline/postgis/`) or [Supabase](https://supabase.com) both work. Note the
+   connection string.
+2. **Fly.io app**: `fly launch --no-deploy` from the repo root (uses `fly.toml` /
+   `service/Dockerfile`; rename the placeholder `app` name in `fly.toml` to whatever it assigns).
+3. **Secrets** (never commit these): `fly secrets set DATABASE_URL=<neon connection string>
+   JWT_SECRET_KEY=<a real random secret> ANTHROPIC_API_KEY=<or OPENAI_API_KEY, matching LLM_PROVIDER>
+   CORS_ORIGINS='["https://<your-username>.github.io"]'`
+4. **First deploy**: `fly deploy` (runs `service/migrations/runner.py` automatically as the
+   `release_command` in `fly.toml` before each deploy).
+5. **CI/CD**: add `FLY_API_TOKEN` (from `fly tokens create deploy`) as a GitHub Actions repo
+   secret — `deploy-service.yml`'s `deploy` job then runs on every push to `main` touching
+   `service/`/`pipeline/`.
+6. **Frontend**: set `VITE_API_BASE_URL` to the deployed Fly app's URL wherever `app/` is built
+   (a repo variable/secret in `.github/workflows/deploy.yml`, or a local `.env` for `npm run dev`)
+   — this is what makes the Dispatch console and sign-in actually appear.
+
 ## Explicitly out of scope (portfolio-grade bar, not a commercial launch)
 
 Billing/Stripe integration, SOC2 controls, formal Terms of Service, SSO/SAML, distributed
 rate-limiting infrastructure (Redis) unless traffic actually needs it, and a usage-dashboard UI
-(the underlying `api_usage_events` data will exist from Phase 6; a dashboard over it does not).
+(the underlying `api_usage_events` table exists; a dashboard over it does not). Per-API-key rate
+limits (the `api_keys.rate_limit_per_min` column) are stored but not yet enforced — every request
+is currently limited uniformly per org via `Settings.rate_limit_default_per_min`.

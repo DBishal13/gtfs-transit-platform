@@ -1,10 +1,13 @@
 """Direct REST endpoints for spatial queries.
 
-Requires authentication (JWT or API key — see service/app/deps.py::get_current_principal)
-and enforces tenant scope: a request for a feed_id outside
-tenancy_service.resolve_visible_feed_ids(org_id) is rejected with 403 before any geo query
-runs. This is the exact same boundary the agent's tool layer (Phase 4) relies on — both
-entry points share it, so there is only one place tenant isolation can go wrong.
+Requires authentication (JWT or API key — see
+service/app/deps.py::get_rate_limited_principal) and enforces tenant scope: a request for
+a feed_id outside tenancy_service.resolve_visible_feed_ids(org_id) is rejected with 403
+before any geo query runs. This is the exact same boundary the agent's tool layer
+(Phase 4) relies on — both entry points share it, so there is only one place tenant
+isolation can go wrong. Every endpoint here is also per-org rate-limited (see
+middleware/rate_limit.py) since these are the queries expensive enough to be worth
+bounding.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg import Connection
 
 from service.app.config import Settings, get_settings
-from service.app.deps import CurrentPrincipal, get_current_principal, get_db
+from service.app.deps import CurrentPrincipal, get_db, get_rate_limited_principal
 from service.app.schemas.geo import (
     GeocodeRequest,
     GeocodeResponse,
@@ -47,7 +50,7 @@ def get_nearest_stops(
     lon: float = Query(..., ge=-180, le=180),
     lat: float = Query(..., ge=-90, le=90),
     limit: int = Query(10, ge=1, le=MAX_LIMIT),
-    principal: CurrentPrincipal = Depends(get_current_principal),
+    principal: CurrentPrincipal = Depends(get_rate_limited_principal),
     conn: Connection = Depends(get_db),
 ) -> NearestStopsResponse:
     _require_feed_access(conn, principal, feed_id)
@@ -61,7 +64,7 @@ def get_stops_within_radius(
     lon: float = Query(..., ge=-180, le=180),
     lat: float = Query(..., ge=-90, le=90),
     radius_m: float = Query(400, gt=0, le=MAX_RADIUS_M),
-    principal: CurrentPrincipal = Depends(get_current_principal),
+    principal: CurrentPrincipal = Depends(get_rate_limited_principal),
     conn: Connection = Depends(get_db),
 ) -> RadiusStopsResponse:
     _require_feed_access(conn, principal, feed_id)
@@ -74,7 +77,7 @@ def get_stops_within_radius(
 @router.post("/geocode", response_model=GeocodeResponse)
 def post_geocode(
     body: GeocodeRequest,
-    principal: CurrentPrincipal = Depends(get_current_principal),
+    principal: CurrentPrincipal = Depends(get_rate_limited_principal),
     settings: Settings = Depends(get_settings),
 ) -> GeocodeResponse:
     """Resolves free-text address/place text to coordinates. Not feed-scoped — geocoding
@@ -92,7 +95,7 @@ def post_geocode(
 def post_reachability(
     feed_id: str,
     body: ReachabilityRequest,
-    principal: CurrentPrincipal = Depends(get_current_principal),
+    principal: CurrentPrincipal = Depends(get_rate_limited_principal),
     conn: Connection = Depends(get_db),
 ) -> ReachabilityResponse:
     _require_feed_access(conn, principal, feed_id)

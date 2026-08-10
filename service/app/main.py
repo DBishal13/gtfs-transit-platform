@@ -16,10 +16,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from service.app.config import get_settings
+from service.app.logging_config import configure_logging
+from service.app.middleware.request_context import RequestContextMiddleware
 from service.app.routers import agent, auth, feeds, geo, health, orgs
 
 
 def create_app() -> FastAPI:
+    configure_logging()
     settings = get_settings()
     app = FastAPI(title="GTFS Transit Platform API", version="0.1.0")
 
@@ -30,6 +33,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestContextMiddleware)
 
     app.include_router(health.router)
     app.include_router(auth.router)

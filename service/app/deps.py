@@ -18,6 +18,7 @@ from psycopg import Connection
 
 from service.app.config import Settings, get_settings
 from service.app.db import get_pool
+from service.app.middleware import rate_limit
 from service.app.services import auth_service, tenancy_service
 
 
@@ -74,6 +75,21 @@ def get_current_principal(
         return CurrentPrincipal(org_id=org_id, user_id=None, role="api_key")
 
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing Authorization or X-API-Key header")
+
+
+def get_rate_limited_principal(
+    principal: CurrentPrincipal = Depends(get_current_principal),
+    settings: Settings = Depends(get_settings),
+) -> CurrentPrincipal:
+    """Same as get_current_principal, plus a per-org rate-limit check — use this (not
+    get_current_principal directly) on any endpoint expensive enough to be worth
+    bounding (geo queries, the LLM agent). See middleware/rate_limit.py."""
+    allowed = rate_limit.check_rate_limit(
+        principal.org_id, limit_per_min=settings.rate_limit_default_per_min
+    )
+    if not allowed:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Rate limit exceeded")
+    return principal
 
 
 def require_role(*allowed_roles: str):

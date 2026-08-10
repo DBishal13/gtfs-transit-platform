@@ -1,0 +1,60 @@
+name: Deploy backend service
+
+# Separate from deploy.yml (the static GitHub Pages workflow, untouched by this file) and
+# from ci.yml's service-tests job (which this duplicates the test step of, deliberately —
+# this workflow only runs on pushes touching backend code, so it needs its own gate
+# before deploying, not just a shared job).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "service/**"
+      - "pipeline/**"
+      - "pyproject.toml"
+      - "fly.toml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: transit
+          POSTGRES_USER: transit
+          POSTGRES_PASSWORD: transit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U transit -d transit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://transit:transit@localhost:5432/transit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install service dependencies
+        run: pip install -e ".[service,dev]"
+      - name: Run service tests against a real Postgres/PostGIS
+        run: pytest service/tests -q
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # Skipped (not failed) until FLY_API_TOKEN is added under this repo's
+    # Settings > Secrets and variables > Actions. See "Deploying" in service/README.md
+    # for the Fly.io/Neon provisioning steps this depends on — none of that is done by
+    # this workflow; it only ships code to an already-provisioned Fly app.
+    if: ${{ secrets.FLY_API_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

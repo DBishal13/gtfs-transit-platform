@@ -84,17 +84,31 @@ def run_agent_turn(
     question/answer text per turn, not intermediate tool exchanges, keeping cross-turn
     token usage bounded).
 
-    Returns {"answer": str, "map_points": list[dict], "tool_trace": list[dict]}.
+    Returns {"answer": str, "map_points": list[dict], "tool_trace": list[dict],
+    "usage": {"input_tokens": int, "output_tokens": int}} — usage is summed across every
+    llm.chat() call made during this turn (Phase 6's api_usage_events metering reads it).
     """
     messages = [*history, {"role": "user", "content": question}]
     tool_trace: list[dict] = []
     map_points: list[dict] = []
+    total_input_tokens = 0
+    total_output_tokens = 0
+
+    def _usage() -> dict:
+        return {"input_tokens": total_input_tokens, "output_tokens": total_output_tokens}
 
     for _ in range(MAX_TOOL_ITERATIONS):
         response: LLMResponse = llm.chat(messages=messages, tools=TOOL_DEFINITIONS, system=AGENT_SYSTEM_PROMPT)
+        total_input_tokens += response.usage.input_tokens
+        total_output_tokens += response.usage.output_tokens
 
         if not response.tool_calls:
-            return {"answer": response.text or "", "map_points": map_points, "tool_trace": tool_trace}
+            return {
+                "answer": response.text or "",
+                "map_points": map_points,
+                "tool_trace": tool_trace,
+                "usage": _usage(),
+            }
 
         assistant_blocks: list[dict] = []
         if response.text:
@@ -118,5 +132,12 @@ def run_agent_turn(
     # Iteration cap exceeded: force a final answer with no further tools offered, rather
     # than looping forever or erroring out.
     final = llm.chat(messages=messages, tools=[], system=AGENT_SYSTEM_PROMPT)
+    total_input_tokens += final.usage.input_tokens
+    total_output_tokens += final.usage.output_tokens
     fallback_text = final.text or "I wasn't able to fully answer within the allowed number of steps."
-    return {"answer": fallback_text, "map_points": map_points, "tool_trace": tool_trace}
+    return {
+        "answer": fallback_text,
+        "map_points": map_points,
+        "tool_trace": tool_trace,
+        "usage": _usage(),
+    }

@@ -1,0 +1,20 @@
+# Build context for service/Dockerfile is the repo root (it COPYs both pipeline/ and
+# service/) — build with: docker build -f service/Dockerfile .
+
+app/
+data/
+docs/
+tests/
+scripts/
+.github/
+.git/
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+service/tests/
+*.md
