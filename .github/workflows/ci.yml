@@ -20,6 +20,34 @@ jobs:
       - name: Validate manifest contract schema is well-formed
         run: python -c "import json; json.load(open('pipeline/export/schema/manifest.schema.json'))"
 
+  service-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: transit
+          POSTGRES_USER: transit
+          POSTGRES_PASSWORD: transit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U transit -d transit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://transit:transit@localhost:5432/transit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install service dependencies
+        run: pip install -e ".[service,dev]"
+      - name: Run service tests against a real Postgres/PostGIS
+        run: pytest service/tests -q
+
   app-build:
     runs-on: ubuntu-latest
     defaults:
