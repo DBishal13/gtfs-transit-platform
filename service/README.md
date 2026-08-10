@@ -13,14 +13,20 @@ per-tenant data isolation. See the plan this was built from for the full design 
 
 ## Status
 
-**Phase 2 of 6** — database foundation, geo REST endpoints, and auth/multi-tenancy. No
-geocoding/reachability yet (Phase 3), no LLM agent yet (Phase 4), no frontend integration yet
-(Phase 5), no deployment/observability polish yet (Phase 6).
+**Phase 3 of 6** — database foundation, geo REST endpoints, auth/multi-tenancy, geocoding, and
+reachability. No LLM agent yet (Phase 4), no frontend integration yet (Phase 5), no
+deployment/observability polish yet (Phase 6).
 
 Every `/geo/*` request now requires either a JWT (`Authorization: Bearer <token>`, issued by
 `/auth/login`) or an API key (`X-API-Key: <key>`, minted via `/auth/api-keys`), and is rejected
 with 403 unless the requested `feed_id` is public, owned by the caller's org, or explicitly
 granted to it (`service/app/services/tenancy_service.py::resolve_visible_feed_ids`).
+
+`POST /geo/geocode` resolves free-text address/place queries to coordinates (Nominatim by
+default; provider-swappable — see `service/app/services/geocoding_service.py`).
+`POST /geo/reachability` returns a **schedule-based walk + one-transit-hop approximation** of
+what's reachable in N minutes — not true multimodal routing; see the docstring in
+`service/app/services/reachability_service.py` for exactly what's simplified and why.
 
 ## Local development
 

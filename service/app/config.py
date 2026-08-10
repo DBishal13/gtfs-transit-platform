@@ -29,10 +29,13 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
 
-    # Geocoding (wired up starting Phase 3)
+    # Geocoding (wired up starting Phase 3) — Nominatim is the default (free, no key
+    # required); Mapbox is a config-only swap proving the GeocodingProvider abstraction
+    # actually swaps providers, not just describes doing so.
     geocoder_provider: str = "nominatim"
     nominatim_base_url: str = "https://nominatim.openstreetmap.org"
     nominatim_user_agent: str = "gtfs-transit-platform/0.1"
+    mapbox_api_key: str | None = None
 
     rate_limit_default_per_min: int = 60
 

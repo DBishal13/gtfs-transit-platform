@@ -12,9 +12,22 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg import Connection
 
+from service.app.config import Settings, get_settings
 from service.app.deps import CurrentPrincipal, get_current_principal, get_db
-from service.app.schemas.geo import NearestStopsResponse, RadiusStopsResponse
-from service.app.services import geo_service, tenancy_service
+from service.app.schemas.geo import (
+    GeocodeRequest,
+    GeocodeResponse,
+    NearestStopsResponse,
+    RadiusStopsResponse,
+    ReachabilityRequest,
+    ReachabilityResponse,
+)
+from service.app.services import (
+    geo_service,
+    geocoding_service,
+    reachability_service,
+    tenancy_service,
+)
 
 router = APIRouter(prefix="/geo", tags=["geo"])
 
@@ -56,3 +69,34 @@ def get_stops_within_radius(
         conn, feed_id=feed_id, lon=lon, lat=lat, radius_m=radius_m
     )
     return RadiusStopsResponse(stops=stops)
+
+
+@router.post("/geocode", response_model=GeocodeResponse)
+def post_geocode(
+    body: GeocodeRequest,
+    principal: CurrentPrincipal = Depends(get_current_principal),
+    settings: Settings = Depends(get_settings),
+) -> GeocodeResponse:
+    """Resolves free-text address/place text to coordinates. Not feed-scoped — geocoding
+    doesn't touch tenant data — but still requires auth to prevent anonymous abuse of the
+    upstream (rate-limited) geocoding provider."""
+    del principal  # auth-only; not used for scoping here
+    provider = geocoding_service.get_geocoding_provider(settings)
+    result = provider.geocode(body.query)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No geocoding match found")
+    return GeocodeResponse(lon=result.lon, lat=result.lat, display_name=result.display_name)
+
+
+@router.post("/reachability", response_model=ReachabilityResponse)
+def post_reachability(
+    feed_id: str,
+    body: ReachabilityRequest,
+    principal: CurrentPrincipal = Depends(get_current_principal),
+    conn: Connection = Depends(get_db),
+) -> ReachabilityResponse:
+    _require_feed_access(conn, principal, feed_id)
+    result = reachability_service.compute_reachability(
+        conn, feed_id=feed_id, lon=body.lon, lat=body.lat, minutes=body.minutes
+    )
+    return ReachabilityResponse(**result)
