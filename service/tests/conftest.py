@@ -30,6 +30,12 @@ TEST_DSN = os.environ.get("TEST_DATABASE_URL", "postgresql://transit:transit@loc
 TEST_FEED_ID = "mini-test"
 FIXTURE_DIR = REPO_ROOT / "tests" / "fixtures" / "mini_gtfs"
 
+# service.app.config.get_settings() is cached at first call (typically triggered by
+# `from service.app.main import app` at collection time), so the app's own DB pool must
+# be pointed at the same database these fixtures seed — otherwise TestClient-driven
+# requests in tests like test_tenancy_isolation.py would silently hit a different DB.
+os.environ.setdefault("DATABASE_URL", TEST_DSN)
+
 
 def _db_reachable(dsn: str) -> bool:
     try:

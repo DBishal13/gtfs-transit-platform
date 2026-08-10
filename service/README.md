@@ -13,10 +13,14 @@ per-tenant data isolation. See the plan this was built from for the full design 
 
 ## Status
 
-**Phase 1 of 6** — database foundation and basic geo REST endpoints. No auth yet (Phase 2), no
+**Phase 2 of 6** — database foundation, geo REST endpoints, and auth/multi-tenancy. No
 geocoding/reachability yet (Phase 3), no LLM agent yet (Phase 4), no frontend integration yet
-(Phase 5), no deployment/observability polish yet (Phase 6). `feed_id` is currently taken at face
-value on every request; there is no tenant isolation until Phase 2 lands.
+(Phase 5), no deployment/observability polish yet (Phase 6).
+
+Every `/geo/*` request now requires either a JWT (`Authorization: Bearer <token>`, issued by
+`/auth/login`) or an API key (`X-API-Key: <key>`, minted via `/auth/api-keys`), and is rejected
+with 403 unless the requested `feed_id` is public, owned by the caller's org, or explicitly
+granted to it (`service/app/services/tenancy_service.py::resolve_visible_feed_ids`).
 
 ## Local development
 
@@ -30,6 +34,11 @@ uvicorn service.app.main:app --reload
 
 # load a real feed for local testing (reuses the existing pipeline/postgis loader):
 python -m pipeline.postgis.load load broward-bct
+
+# create an account, then use the returned access_token as a Bearer token (or mint an
+# API key via POST /auth/api-keys once logged in):
+curl -X POST localhost:8000/auth/signup -H 'Content-Type: application/json' \
+  -d '{"org_name":"Acme Transit","email":"you@example.com","password":"correct horse battery"}'
 ```
 
 ## Tests
