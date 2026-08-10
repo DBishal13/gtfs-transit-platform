@@ -215,3 +215,152 @@ th {
   padding: 2rem 0;
   text-align: center;
 }
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.92rem;
+  padding: 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-form input {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+
+/* Dispatch console: a terminal-styled command bar docked to the map, deliberately
+ * distinct from a chat widget — monospace, prompt glyphs, structured readout lines. */
+.dispatch {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid var(--border);
+}
+
+.dispatch__handle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dispatch__prompt {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.dispatch__hint {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.dispatch__body {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  max-height: 42vh;
+}
+
+.dispatch__log {
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.dispatch__empty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.dispatch__turn {
+  margin-bottom: 0.9rem;
+}
+
+.dispatch__question {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.dispatch__trace {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  padding-left: 0.9rem;
+}
+
+.dispatch__trace--pending {
+  color: var(--accent);
+}
+
+.dispatch__answer {
+  margin-top: 0.3rem;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.dispatch__error {
+  color: var(--error);
+  padding: 0 1rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.dispatch__signin {
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+}
+
+.dispatch__input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.dispatch__caret {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.dispatch__input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}

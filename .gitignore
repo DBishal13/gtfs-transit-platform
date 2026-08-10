@@ -13,6 +13,9 @@ node_modules/
 app/dist/
 app/.vite/
 *.local
+*.tsbuildinfo
+app/vite.config.js
+app/vite.config.d.ts
 
 # Real/generated data the app reads locally — populated from app/public/data-sample/
 # (committed) or a real pipeline run/CI artifact. Never committed itself.

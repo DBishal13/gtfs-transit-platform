@@ -58,12 +58,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      # No package-lock.json is committed yet (this environment has no Node to generate
-      # one) — using `npm install` for now. Once you run `npm install` locally and commit
-      # the resulting lockfile, switch this to `npm ci` and add `cache: npm` above for
-      # faster, fully reproducible installs.
+          cache: npm
+          cache-dependency-path: app/package-lock.json
       - name: Install app dependencies
-        run: npm install
+        run: npm ci
       - name: Lint
         run: npm run lint
       - name: Type-check and build (using committed sample data)

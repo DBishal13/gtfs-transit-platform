@@ -1,5 +1,21 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { isBackendConfigured } from "../lib/apiClient";
+import { useAuthContext } from "../lib/AuthContext";
 import { useFeedContext } from "../lib/FeedContext";
+
+function AuthStatus() {
+  const { isAuthenticated, logout } = useAuthContext();
+  if (!isBackendConfigured()) return null;
+  return isAuthenticated ? (
+    <button className="link-button" onClick={logout}>
+      Sign out
+    </button>
+  ) : (
+    <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>
+      Sign in
+    </NavLink>
+  );
+}
 
 function FeedPicker() {
   const { manifest, selectedFeedId, setSelectedFeedId, loading } = useFeedContext();
@@ -47,6 +63,7 @@ export default function Layout() {
           Compare
         </NavLink>
         <FeedPicker />
+        <AuthStatus />
       </nav>
       <main className="app-main">
         <Outlet />
